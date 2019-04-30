@@ -5,7 +5,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 
-        tools:context=".ScanImageActivity">
+        tools:context=".feature.scanImage.ScanImageActivity">
     <ImageView
             android:id="@+id/imgScan"
             android:layout_width="match_parent"

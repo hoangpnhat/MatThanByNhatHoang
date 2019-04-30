@@ -1,18 +1,37 @@
-package com.nhathoang.matthan
+package com.nhathoang.matthan.feature.scanImage
 
-import android.content.Intent
 import android.net.Uri
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.Rotate
 import com.bumptech.glide.request.RequestOptions
+import com.yasgard.bartr.base.BaseActivity
 import kotlinx.android.synthetic.main.activity_scan_image.*
 import java.io.File
 
-class ScanImageActivity : AppCompatActivity() {
+
+
+
+
+class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
+    override fun onRecognizerSuccess(data: String?) {
+
+    }
+
+    override fun onRecognizerError(error: String?) {
+
+    }
+
+    override fun getContextView(): BaseActivity<*> {
+        return this
+    }
+
+    override fun getPresenter(): ScanImagePresenterImp? {
+        return ScanImagePresenterImp(this)
+    }
+
     var pathImage: String? = null
 
     companion object {
@@ -21,14 +40,13 @@ class ScanImageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_scan_image)
+        setContentView(com.nhathoang.matthan.R.layout.activity_scan_image)
         pathImage = intent.getStringExtra(IMAGE_PATH)
-        val imageUri = Uri.parse(pathImage)
         Log.i("DATA RECEIVE", pathImage)
         Glide.with(imgScan)
-            .load(File(imageUri.path)) // Uri of the picture
+            .load(File(Uri.parse(pathImage).path)) // Uri of the picture
             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-            .transform(Rotate(90))
             .into(imgScan)
+//        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
     }
 }

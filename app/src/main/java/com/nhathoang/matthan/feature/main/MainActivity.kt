@@ -1,4 +1,4 @@
-package com.nhathoang.matthan
+package com.nhathoang.matthan.feature.main
 
 import android.graphics.SurfaceTexture
 import android.support.v7.app.AppCompatActivity
@@ -27,6 +27,9 @@ import android.media.ImageReader
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.SparseIntArray
+import com.nhathoang.matthan.R
+import com.nhathoang.matthan.feature.scanImage.ScanImageActivity
 import java.io.*
 import kotlin.collections.ArrayList
 
@@ -43,7 +46,14 @@ open class MainActivity : AppCompatActivity() {
     private var mBackgroundThread: HandlerThread? = null
     var textureViewListener: TextureView.SurfaceTextureListener? = null
     private var imageReader: ImageReader? = null
+    private val ORIENTATIONS = SparseIntArray()
 
+    init {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90)
+        ORIENTATIONS.append(Surface.ROTATION_90, 0)
+        ORIENTATIONS.append(Surface.ROTATION_180, 270)
+        ORIENTATIONS.append(Surface.ROTATION_270, 180)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -114,7 +124,7 @@ open class MainActivity : AppCompatActivity() {
             captureBuilder?.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
             // Orientation
             val rotation: Int = windowManager.defaultDisplay.rotation
-//            captureBuilder?.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
+            captureBuilder?.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
             val date = Date().time
             val file = File(Environment.getExternalStorageDirectory(), "/pic$date.jpg")
             val readerListener: ImageReader.OnImageAvailableListener = object : ImageReader.OnImageAvailableListener {
@@ -156,7 +166,7 @@ open class MainActivity : AppCompatActivity() {
                     ) {
                         super.onCaptureCompleted(session, request, result)
 //                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this@MainActivity,ScanImageActivity::class.java).apply {
+                        startActivity(Intent(this@MainActivity, ScanImageActivity::class.java).apply {
                             putExtra(ScanImageActivity.IMAGE_PATH,file.toString())
                         })
                         //createCameraPreview()
