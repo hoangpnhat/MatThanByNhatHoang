@@ -1,6 +1,5 @@
 package com.nhathoang.matthan
 
-import android.Manifest
 import android.graphics.SurfaceTexture
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -9,20 +8,15 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.Manifest.permission
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
+import android.content.Intent
 import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
-import android.hardware.camera2.params.StreamConfigurationMap
-import android.content.Context.CAMERA_SERVICE
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
-import android.support.v4.app.FragmentActivity
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
-import android.support.annotation.NonNull
 import java.util.Arrays.asList
-import android.opengl.ETC1.getHeight
-import android.opengl.ETC1.getWidth
 import android.view.Surface
 import java.util.*
 import android.hardware.camera2.CameraAccessException
@@ -33,12 +27,7 @@ import android.media.ImageReader
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
-import android.support.v4.content.ContextCompat.getSystemService
-import android.util.SparseIntArray
 import java.io.*
-import java.nio.ByteBuffer
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import kotlin.collections.ArrayList
 
 
@@ -166,8 +155,11 @@ open class MainActivity : AppCompatActivity() {
                         result: TotalCaptureResult
                     ) {
                         super.onCaptureCompleted(session, request, result)
-                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
-                        createCameraPreview()
+//                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@MainActivity,ScanImageActivity::class.java).apply {
+                            putExtra(ScanImageActivity.IMAGE_PATH,file.toString())
+                        })
+                        //createCameraPreview()
                     }
                 }
             cameraDevice?.createCaptureSession(outputSurfaces, object : CameraCaptureSession.StateCallback() {
@@ -264,13 +256,13 @@ open class MainActivity : AppCompatActivity() {
         Log.e("TAG", "openCamera X")
     }
 
-    fun startBackgroundThread() {
+    private fun startBackgroundThread() {
         mBackgroundThread = HandlerThread("Camera Background")
         mBackgroundThread?.start()
         mBackgroundHandler = Handler(mBackgroundThread?.getLooper())
     }
 
-    fun stopBackgroundThread() {
+    private fun stopBackgroundThread() {
         mBackgroundThread?.quitSafely()
         try {
             mBackgroundThread?.join()
