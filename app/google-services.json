@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "786702493615",
+    "firebase_url": "https://matthanbynhathoang.firebaseio.com",
+    "project_id": "matthanbynhathoang",
+    "storage_bucket": "matthanbynhathoang.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786702493615:android:ae9565b172fa0844",
+        "android_client_info": {
+          "package_name": "com.nhathoang.matthan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "786702493615-g9qqu947p2fk1u4bt88rv8g5sje4k5ul.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nhathoang.matthan",
+            "certificate_hash": "4081ab7b8e7f0cb7816df016049915d811dbaaef"
+          }
+        },
+        {
+          "client_id": "786702493615-9c9dno1dd3c3fkqjsshm6645lju15g2e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKqIPcu0soaqYZ-1lZeyQieNhVVQ-9IJI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "786702493615-9c9dno1dd3c3fkqjsshm6645lju15g2e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
