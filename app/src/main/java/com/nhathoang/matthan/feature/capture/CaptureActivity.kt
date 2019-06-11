@@ -24,7 +24,6 @@ import android.widget.Toast
 import com.nhathoang.matthan.R
 import com.nhathoang.matthan.feature.scanImage.ScanImageActivity
 import kotlinx.android.synthetic.main.activity_capture.*
-import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -52,7 +51,7 @@ class CaptureActivity : AppCompatActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_capture)
 
         textureViewListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
@@ -69,11 +68,11 @@ class CaptureActivity : AppCompatActivity() {
                 return false
             }
         }
-        camera.surfaceTextureListener = textureViewListener
-        btnCapture.setOnClickListener {
+        camera?.surfaceTextureListener = textureViewListener
+        btnCapture?.setOnClickListener {
             takePicture()
         }
-        btnBack.setOnClickListener {
+        btnBack?.setOnClickListener {
             onBackPressed()
         }
     }
@@ -283,12 +282,15 @@ class CaptureActivity : AppCompatActivity() {
     override fun onResume() {
         Log.e("TAG", "onResume")
         startBackgroundThread()
-        if (camera.isAvailable) {
-            openCamera()
-        } else {
-            camera.surfaceTextureListener = textureViewListener
+        camera?.let{
+            if (it.isAvailable) {
+                openCamera()
+            } else {
+                it.surfaceTextureListener = textureViewListener
+            }
+            super.onResume()
         }
-        super.onResume()
+
     }
 
     override fun onPause() {
