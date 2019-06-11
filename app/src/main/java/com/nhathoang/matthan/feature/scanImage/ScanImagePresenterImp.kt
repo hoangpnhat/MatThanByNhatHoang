@@ -47,8 +47,13 @@ class ScanImagePresenterImp(private val mView: ScanImageView?) : BasePresenter()
             image?.let {
                 detector.processImage(it)
                     .addOnSuccessListener { firebaseVisionText ->
-                        mView?.onRecognizerSuccess(firebaseVisionText.text)
-                        Log.i("result", firebaseVisionText.text)
+                        firebaseVisionText?.text.let {
+                            mView?.onRecognizerSuccess(firebaseVisionText.text)
+                            Log.i("result", firebaseVisionText.text)
+                        }
+                        if(firebaseVisionText.text == null){
+                            mView?.onRecognizerError("null text")
+                        }
                     }
                     .addOnFailureListener { exception ->
                         mView?.onRecognizerError(exception.message)

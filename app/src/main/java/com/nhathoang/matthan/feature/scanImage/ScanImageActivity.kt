@@ -9,6 +9,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.Rotate
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.signature.ObjectKey
 import com.nhathoang.matthan.feature.Constant
 import com.yasgard.bartr.base.BaseActivity
 import kotlinx.android.synthetic.main.activity_scan_image.*
@@ -20,11 +21,16 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
 
 
     override fun onRecognizerSuccess(data: String?) {
-        Log.i("data", data)
+        data?.let{
+            mPresenter?.getSpeechOK(data)
+        }
     }
 
     override fun onRecognizerError(error: String?) {
         Log.i("error", error)
+        if(error == "null text"){
+            // voice: khong nhan duoc ki tu, xin vui long thu lai
+        }
     }
 
     override fun getContextView(): BaseActivity<*> {
@@ -37,6 +43,7 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
 
     var pathImage: String? = null
     lateinit var mediaPlayer: MediaPlayer
+
     companion object {
         const val IMAGE_PATH = "path"
     }
@@ -48,13 +55,14 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
         Log.i("DATA RECEIVE", pathImage)
         Glide.with(imgScan)
             .load(File(Uri.parse(pathImage).path)) // Uri of the picture
-            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+            .fitCenter()
             .into(imgScan)
 //        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
 //        mPresenter?.getSpeech("Tôi tên là Phạm Khánh Huy")
         mediaPlayer = MediaPlayer()
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        mPresenter?.getSpeechOK("Tôi tên là Phạm Khánh Huy")
+        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
 
 
     }
@@ -67,23 +75,20 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
                 this.setDataSource(link)
                 this.prepare()
             } catch (e: IllegalArgumentException) {
-                // TODO Auto-generated catch block
                 e.printStackTrace()
             } catch (e: SecurityException) {
-                // TODO Auto-generated catch block
                 e.printStackTrace()
             } catch (e: IllegalStateException) {
-                // TODO Auto-generated catch block
                 e.printStackTrace()
             } catch (e: IOException) {
-                // TODO Auto-generated catch block
                 e.printStackTrace()
             }
             this.start()
         }
     }
+
     override fun onGetURLSuccess(url: String?) {
-        url?.let{
+        url?.let {
             streamAudio(it)
         }
     }

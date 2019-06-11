@@ -9,10 +9,6 @@ import com.nhathoang.matthan.R
 import kotlinx.android.synthetic.main.dialog_message.*
 
 
-/**
- * Created by thaivuvo on 2018/04/24
- */
-
 class DialogMessage : Dialog {
 
     //    internal var onButtonClick: OnButtonClick = null
