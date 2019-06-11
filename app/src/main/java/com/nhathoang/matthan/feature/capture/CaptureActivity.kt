@@ -1,48 +1,34 @@
-package com.nhathoang.matthan
+package com.nhathoang.matthan.feature.capture
 
 import android.Manifest
-import android.graphics.SurfaceTexture
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.view.TextureView
-import kotlinx.android.synthetic.main.activity_main.*
-import android.Manifest.permission
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
-import android.support.v4.app.ActivityCompat
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera2.params.StreamConfigurationMap
-import android.content.Context.CAMERA_SERVICE
 import android.graphics.ImageFormat
+import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
-import android.support.v4.app.FragmentActivity
-import android.util.Log
-import android.util.Size
-import android.widget.Toast
-import android.support.annotation.NonNull
-import java.util.Arrays.asList
-import android.opengl.ETC1.getHeight
-import android.opengl.ETC1.getWidth
-import android.view.Surface
-import java.util.*
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraMetadata
-import android.hardware.camera2.CaptureRequest
 import android.media.Image
 import android.media.ImageReader
+import android.support.v7.app.AppCompatActivity
+import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
-import android.support.v4.content.ContextCompat.getSystemService
+import android.support.v4.app.ActivityCompat
+import android.util.Log
+import android.util.Size
 import android.util.SparseIntArray
+import android.view.Surface
+import android.view.TextureView
+import android.widget.Toast
+import com.nhathoang.matthan.R
+import com.nhathoang.matthan.feature.scanImage.ScanImageActivity
+import kotlinx.android.synthetic.main.activity_capture.*
 import java.io.*
-import java.nio.ByteBuffer
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.collections.ArrayList
 
-
-open class MainActivity : AppCompatActivity() {
+class CaptureActivity : AppCompatActivity() {
 
     private var cameraId: String? = null
     private var imageDimension: Size? = null
@@ -54,10 +40,18 @@ open class MainActivity : AppCompatActivity() {
     private var mBackgroundThread: HandlerThread? = null
     var textureViewListener: TextureView.SurfaceTextureListener? = null
     private var imageReader: ImageReader? = null
+    private val ORIENTATIONS = SparseIntArray()
+    var imageUri = ""
 
+    init {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90)
+        ORIENTATIONS.append(Surface.ROTATION_90, 0)
+        ORIENTATIONS.append(Surface.ROTATION_180, 270)
+        ORIENTATIONS.append(Surface.ROTATION_270, 180)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_capture)
 
         textureViewListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
@@ -74,11 +68,11 @@ open class MainActivity : AppCompatActivity() {
                 return false
             }
         }
-        camera.surfaceTextureListener = textureViewListener
-        btnCapture.setOnClickListener {
+        camera?.surfaceTextureListener = textureViewListener
+        btnCapture?.setOnClickListener {
             takePicture()
         }
-        btnBack.setOnClickListener {
+        btnBack?.setOnClickListener {
             onBackPressed()
         }
     }
@@ -125,7 +119,7 @@ open class MainActivity : AppCompatActivity() {
             captureBuilder?.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
             // Orientation
             val rotation: Int = windowManager.defaultDisplay.rotation
-//            captureBuilder?.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
+            captureBuilder?.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
             val date = Date().time
             val file = File(Environment.getExternalStorageDirectory(), "/pic$date.jpg")
             val readerListener: ImageReader.OnImageAvailableListener = object : ImageReader.OnImageAvailableListener {
@@ -166,8 +160,11 @@ open class MainActivity : AppCompatActivity() {
                         result: TotalCaptureResult
                     ) {
                         super.onCaptureCompleted(session, request, result)
-                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
-                        createCameraPreview()
+//                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@CaptureActivity, ScanImageActivity::class.java).apply {
+                            putExtra(ScanImageActivity.IMAGE_PATH,file.toString())
+                        })
+                        //createCameraPreview()
                     }
                 }
             cameraDevice?.createCaptureSession(outputSurfaces, object : CameraCaptureSession.StateCallback() {
@@ -195,7 +192,7 @@ open class MainActivity : AppCompatActivity() {
             val surface = Surface(texture)
             captureRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             captureRequestBuilder?.addTarget(surface)
-            cameraDevice?.createCaptureSession(asList(surface), object : CameraCaptureSession.StateCallback() {
+            cameraDevice?.createCaptureSession(Arrays.asList(surface), object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                     //The camera is already closed
                     if (null == cameraDevice) {
@@ -207,7 +204,7 @@ open class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                    Toast.makeText(this@MainActivity, "Configuration change", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@CaptureActivity, "Configuration change", Toast.LENGTH_SHORT).show()
                 }
             }, null)
         } catch (e: CameraAccessException) {
@@ -244,14 +241,14 @@ open class MainActivity : AppCompatActivity() {
             imageDimension = map.getOutputSizes(SurfaceTexture::class.java)[0]
             // Add permission for camera and let user grant the permission
             if (ActivityCompat.checkSelfPermission(
-                    this, permission.CAMERA
+                    this, Manifest.permission.CAMERA
                 ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    this, WRITE_EXTERNAL_STORAGE
+                    this, Manifest.permission.WRITE_EXTERNAL_STORAGE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    this@MainActivity,
-                    arrayOf(permission.CAMERA, WRITE_EXTERNAL_STORAGE),
+                    this@CaptureActivity,
+                    arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE),
                     REQUEST_CAMERA_PERMISSION
                 )
                 return
@@ -264,13 +261,13 @@ open class MainActivity : AppCompatActivity() {
         Log.e("TAG", "openCamera X")
     }
 
-    fun startBackgroundThread() {
+    private fun startBackgroundThread() {
         mBackgroundThread = HandlerThread("Camera Background")
         mBackgroundThread?.start()
         mBackgroundHandler = Handler(mBackgroundThread?.getLooper())
     }
 
-    fun stopBackgroundThread() {
+    private fun stopBackgroundThread() {
         mBackgroundThread?.quitSafely()
         try {
             mBackgroundThread?.join()
@@ -285,12 +282,15 @@ open class MainActivity : AppCompatActivity() {
     override fun onResume() {
         Log.e("TAG", "onResume")
         startBackgroundThread()
-        if (camera.isAvailable) {
-            openCamera()
-        } else {
-            camera.surfaceTextureListener = textureViewListener
+        camera?.let{
+            if (it.isAvailable) {
+                openCamera()
+            } else {
+                it.surfaceTextureListener = textureViewListener
+            }
+            super.onResume()
         }
-        super.onResume()
+
     }
 
     override fun onPause() {

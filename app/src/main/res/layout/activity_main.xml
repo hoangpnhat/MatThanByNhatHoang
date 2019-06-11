@@ -2,111 +2,24 @@
 <android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/slidingLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#000">
-
-    <TextureView
-            android:id="@+id/camera"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            app:layout_constraintTop_toTopOf="parent"/>
-
-    <View
-            android:id="@+id/topView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="#66000000"
-            android:clickable="true"
-            app:layout_constraintBottom_toBottomOf="@+id/btnBack"
-            app:layout_constraintTop_toTopOf="parent"/>
-
+        android:layout_height="match_parent">
     <ImageView
-            android:id="@+id/btnBack"
+            android:id="@+id/icBluetooth"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:src="@drawable/ic_bluetooth"
+            android:layout_width="150dp" android:layout_height="150dp"/>
+    <TextView
+            app:layout_constraintTop_toBottomOf="@id/icBluetooth"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:padding="10dp"
-            android:src="@drawable/ic_close_white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-    <FrameLayout
-            android:id="@+id/layoutIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:src="@drawable/ic_indicator_bottom"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
-    </FrameLayout>
-
-    <LinearLayout
-            android:id="@+id/layoutCameraMode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:weightSum="3"
-            app:layout_constraintBottom_toTopOf="@id/layoutIndicator">
-
-        <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:alpha="0.5"
-                android:gravity="center"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:text=""
-                android:textAllCaps="true"
-                android:textColor="#fff"
-                android:textSize="12sp"/>
-
-        <TextView
-                android:id="@+id/tvCameraModePicture"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:text="Camera"
-                android:textAllCaps="true"
-                android:textColor="#fff"
-                android:textSize="14sp"/>
-    </LinearLayout>
-
-    <FrameLayout
-            android:id="@+id/layoutTakePicture"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toTopOf="@id/layoutCameraMode">
-        <FrameLayout
-                android:id="@+id/layoutBtnCapture"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_gravity="center">
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_btn_take_picture_frame"/>
-
-            <View
-                    android:id="@+id/btnCapture"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="10dp"
-                    android:background="@drawable/bg_btn_take_picture"
-                    android:duplicateParentState="true"/>
-
-        </FrameLayout>
-    </FrameLayout>
+            android:textSize="24sp"
+            android:textColor="#0a9df1"
+            android:text="Click to find Bluetooth device"/>
 </android.support.constraint.ConstraintLayout>
