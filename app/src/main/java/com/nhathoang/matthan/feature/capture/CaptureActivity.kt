@@ -1,12 +1,19 @@
 package com.nhathoang.matthan.feature.capture
 
 import android.Manifest
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbDeviceConnection
+import android.hardware.usb.UsbInterface
+import android.hardware.usb.UsbManager
 import android.media.Image
 import android.media.ImageReader
 import android.support.v7.app.AppCompatActivity
@@ -15,21 +22,27 @@ import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat.getSystemService
+import android.support.v4.content.ContextCompat.startActivity
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Toast
+import com.felhr.usbserial.UsbSerialDevice
+import com.felhr.usbserial.UsbSerialInterface
 import com.nhathoang.matthan.R
 import com.nhathoang.matthan.feature.scanImage.ScanImageActivity
 import kotlinx.android.synthetic.main.activity_capture.*
 import java.io.*
+import java.nio.charset.Charset
 import java.util.*
 import kotlin.collections.ArrayList
 
 class CaptureActivity : AppCompatActivity() {
 
+    // Camera API
     private var cameraId: String? = null
     private var imageDimension: Size? = null
     private val REQUEST_CAMERA_PERMISSION = 200
@@ -43,16 +56,23 @@ class CaptureActivity : AppCompatActivity() {
     private val ORIENTATIONS = SparseIntArray()
     var imageUri = ""
 
+    //Serial USB
+    private val ACTION_USB_PERMISSION = "permission"
+    private lateinit var mUsbManager: UsbManager
+    private var mDevice: UsbDevice? = null
+    private var mConnection: UsbDeviceConnection? = null
+    private var mSerial: UsbSerialDevice? = null
+
     init {
         ORIENTATIONS.append(Surface.ROTATION_0, 90)
         ORIENTATIONS.append(Surface.ROTATION_90, 0)
         ORIENTATIONS.append(Surface.ROTATION_180, 270)
         ORIENTATIONS.append(Surface.ROTATION_270, 180)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_capture)
-
         textureViewListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
                 openCamera()
@@ -120,8 +140,14 @@ class CaptureActivity : AppCompatActivity() {
             // Orientation
             val rotation: Int = windowManager.defaultDisplay.rotation
             captureBuilder?.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
+            // Date time de luu anh theo thoi gian
+
+
             val date = Date().time
             val file = File(Environment.getExternalStorageDirectory(), "/pic$date.jpg")
+
+
+            /////
             val readerListener: ImageReader.OnImageAvailableListener = object : ImageReader.OnImageAvailableListener {
                 override fun onImageAvailable(reader: ImageReader) {
                     var image: Image? = null
@@ -130,7 +156,11 @@ class CaptureActivity : AppCompatActivity() {
                         val buffer = image.planes[0].buffer
                         val bytes = ByteArray(buffer.capacity())
                         buffer.get(bytes)
+                        /////////
                         save(bytes)
+
+
+                        /////////
                     } catch (e: FileNotFoundException) {
                         e.printStackTrace()
                     } catch (e: IOException) {
@@ -155,16 +185,17 @@ class CaptureActivity : AppCompatActivity() {
             val captureListener: CameraCaptureSession.CaptureCallback =
                 object : CameraCaptureSession.CaptureCallback() {
                     override fun onCaptureCompleted(
-                        session: CameraCaptureSession,
-                        request: CaptureRequest,
+                        session: CameraCaptureSession, request: CaptureRequest,
                         result: TotalCaptureResult
                     ) {
                         super.onCaptureCompleted(session, request, result)
-//                        Toast.makeText(this@MainActivity, "Saved:" + file, Toast.LENGTH_SHORT).show()
+
+                        /// Gui path qua man hinh Scan
                         startActivity(Intent(this@CaptureActivity, ScanImageActivity::class.java).apply {
-                            putExtra(ScanImageActivity.IMAGE_PATH,file.toString())
+                            putExtra(ScanImageActivity.IMAGE_PATH, file.toString())
                         })
-                        //createCameraPreview()
+
+
                     }
                 }
             cameraDevice?.createCaptureSession(outputSurfaces, object : CameraCaptureSession.StateCallback() {
@@ -282,7 +313,33 @@ class CaptureActivity : AppCompatActivity() {
     override fun onResume() {
         Log.e("TAG", "onResume")
         startBackgroundThread()
-        camera?.let{
+        mUsbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+        val filter = IntentFilter()
+        filter.addAction(ACTION_USB_PERMISSION)
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+        registerReceiver(broadcastReceiver,filter )
+        mSerial?.open()
+        val usbDevices = mUsbManager.deviceList
+        if (usbDevices.isNotEmpty()) {
+            var keep = true
+            for (entry in usbDevices.entries) {
+                mDevice = entry.value
+                val deviceVID = mDevice!!.vendorId
+                if (deviceVID == 0x2341) { //Arduino Vendor ID
+                    val pi = PendingIntent.getBroadcast(this, 0, Intent(ACTION_USB_PERMISSION), 0)
+                    mUsbManager.requestPermission(mDevice, pi)
+                    keep = false
+                } else {
+                    mConnection = null
+                    mDevice = null
+                }
+
+                if (!keep)
+                    break
+            }
+        }
+        camera?.let {
             if (it.isAvailable) {
                 openCamera()
             } else {
@@ -290,6 +347,7 @@ class CaptureActivity : AppCompatActivity() {
             }
             super.onResume()
         }
+        takePicture()
 
     }
 
@@ -297,8 +355,11 @@ class CaptureActivity : AppCompatActivity() {
         Log.e("TAG", "onPause")
         closeCamera()
         stopBackgroundThread()
+        mSerial?.close()
+        unregisterReceiver(broadcastReceiver)
         super.onPause()
     }
+
     private fun closeCamera() {
         if (null != cameraDevice) {
             cameraDevice?.close()
@@ -309,4 +370,64 @@ class CaptureActivity : AppCompatActivity() {
             imageReader = null
         }
     }
+
+        private val broadcastReceiver = object : BroadcastReceiver() {
+            //Broadcast Receiver to automatically start and stop the Serial connection.
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let {
+                    if (it.action == (ACTION_USB_PERMISSION)) {
+                        val granted = it.extras.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
+                        if (granted) {
+                            mConnection = mUsbManager.openDevice(mDevice)
+                            mSerial = UsbSerialDevice.createUsbSerialDevice(mDevice, mConnection)
+                            if (mSerial != null) {
+                                if (mSerial!!.open()) { //Set Serial Connection Parameters.
+                                    mSerial!!.setBaudRate(9600)
+                                    mSerial!!.setDataBits(UsbSerialInterface.DATA_BITS_8)
+                                    mSerial!!.setStopBits(UsbSerialInterface.STOP_BITS_1)
+                                    mSerial!!.setParity(UsbSerialInterface.PARITY_NONE)
+                                    mSerial!!.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF)
+                                    mSerial!!.read(mCallback) //
+                                    Toast.makeText(this@CaptureActivity,"Serial Connection Opened!\n", Toast.LENGTH_SHORT).show()
+
+                                } else {
+                                    Log.d("SERIAL", "PORT NOT OPEN")
+                                }
+                            } else {
+                                Log.d("SERIAL", "PORT IS NULL")
+                            }
+                        } else {
+                            Log.d("SERIAL", "PERM NOT GRANTED")
+                        }
+                    } else if (intent.action== UsbManager.ACTION_USB_DEVICE_ATTACHED) {
+//                        onClickStart(startButton)
+                    } else if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
+//                        onClickStop(stopButton)
+                    } else {}
+                }
+
+            }
+        }
+    private var mCallback: UsbSerialInterface.UsbReadCallback =
+        UsbSerialInterface.UsbReadCallback { receive ->
+            //Defining a Callback which triggers whenever data is read.
+            var data: String? = null
+            try {
+                data = String(receive, Charset.forName("UTF-8"))
+                when (data) {
+                    "nut1" -> {
+                        takePicture()
+                    }
+                    "nut2" -> {
+
+                    }
+                    "nut3" -> {
+                        onBackPressed()
+                    }
+                }
+
+            } catch (e: UnsupportedEncodingException) {
+                e.printStackTrace()
+            }
+        }
 }

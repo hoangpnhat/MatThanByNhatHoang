@@ -2,24 +2,29 @@
 <android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
         android:layout_height="match_parent">
-    <ImageView
-            android:id="@+id/icBluetooth"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:src="@drawable/ic_bluetooth"
-            android:layout_width="150dp" android:layout_height="150dp"/>
-    <TextView
-            app:layout_constraintTop_toBottomOf="@id/icBluetooth"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textColor="#0a9df1"
-            android:text="Click to find Bluetooth device"/>
+    <!--<Button-->
+            <!--android:id="@+id/btnCaptureFeature"-->
+            <!--android:text="@string/text_btn_capture"-->
+            <!--android:layout_width="match_parent"-->
+            <!--app:layout_constraintStart_toStartOf="parent"-->
+            <!--app:layout_constraintEnd_toEndOf="parent"-->
+            <!--app:layout_constraintTop_toTopOf="parent"-->
+            <!--android:textSize="24sp"-->
+            <!--android:background="@drawable/bg_btn"-->
+            <!--app:layout_constraintBottom_toTopOf="@id/btnBaoNoi"-->
+            <!--android:layout_height="0dp"/>-->
+    <!--<Button-->
+            <!--android:id="@+id/btnBaoNoi"-->
+            <!--app:layout_constraintStart_toStartOf="parent"-->
+            <!--app:layout_constraintEnd_toEndOf="parent"-->
+            <!--app:layout_constraintTop_toBottomOf="@id/btnCaptureFeature"-->
+            <!--app:layout_constraintBottom_toBottomOf="parent"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:background="@drawable/bg_btn_baonoi"-->
+            <!--android:text="@string/text_btn_baonoi"-->
+            <!--android:textSize="24sp"-->
+            <!--android:layout_height="0dp"/>-->
+    <TextView android:id="@+id/txtView" android:layout_width="match_parent" android:layout_height="match_parent"/>
 </android.support.constraint.ConstraintLayout>

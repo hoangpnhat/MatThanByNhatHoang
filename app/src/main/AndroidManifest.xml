@@ -21,24 +21,40 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".feature.itemNews.ItemNews">
+        </activity>
+        <activity android:name=".feature.readNews.ReadNews">
+        </activity>
         <activity android:name=".feature.capture.CaptureActivity">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+            </intent-filter>
+
+            <meta-data
+                    android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                    android:resource="@xml/device_filter"/>
+        </activity>
+        <activity android:name=".feature.scanImage.ScanImageActivity"/>
+
+        <activity android:name=".feature.main.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+            </intent-filter>
+
+            <meta-data
+                    android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                    android:resource="@xml/device_filter"/>
         </activity>
 
         <meta-data
                 android:name="com.google.firebase.ml.vision.DEPENDENCIES"
                 android:value="ocr"
                 tools:replace="android:value"/>
-
-        <activity android:name=".feature.scanImage.ScanImageActivity">
-        </activity>
-        <activity android:name=".feature.main.MainActivity">
-
-        </activity>
     </application>
 
 </manifest>

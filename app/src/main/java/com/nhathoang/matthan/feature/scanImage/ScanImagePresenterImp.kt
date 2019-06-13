@@ -24,6 +24,7 @@ import java.util.*
 class ScanImagePresenterImp(private val mView: ScanImageView?) : BasePresenter() {
 
     fun postImageToOCRService(imageUri: Uri?) {
+        // chay ngam
         val ocrService = OcrService(mView)
         ocrService.execute(imageUri)
     }
@@ -34,29 +35,34 @@ class ScanImagePresenterImp(private val mView: ScanImageView?) : BasePresenter()
             try {
                 val imgFile = File(params[0]?.path)
                 if (imgFile.exists()) {
+                    /// Decode anh thanh dang bitmap
                     val myBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
                     image = FirebaseVisionImage.fromBitmap(myBitmap)
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
+
+            // Set ngon ngu de nhan dien
             val options = FirebaseVisionCloudDocumentRecognizerOptions.Builder()
                 .setLanguageHints(Arrays.asList("vi", "vi"))
                 .build()
+
+
+            /// Detector de xu li anh.
             val detector = FirebaseVision.getInstance().getCloudDocumentTextRecognizer(options)
             image?.let {
                 detector.processImage(it)
                     .addOnSuccessListener { firebaseVisionText ->
-                        firebaseVisionText?.text.let {
-                            mView?.onRecognizerSuccess(firebaseVisionText.text)
+                        if(firebaseVisionText == null){
+                            mView?.onRecognizerError("null text") // tra ve rong
+                        } else{
+                            mView?.onRecognizerSuccess(firebaseVisionText.text) // tra ve success
                             Log.i("result", firebaseVisionText.text)
-                        }
-                        if(firebaseVisionText.text == null){
-                            mView?.onRecognizerError("null text")
                         }
                     }
                     .addOnFailureListener { exception ->
-                        mView?.onRecognizerError(exception.message)
+                        mView?.onRecognizerError(exception.message)  // tra ve loi
                         Log.i("result", exception.message)
                     }
             }
@@ -96,7 +102,7 @@ class ScanImagePresenterImp(private val mView: ScanImageView?) : BasePresenter()
     }
 
 
-    fun getSpeechOK(url: String) {
+    fun getSpeechOK(text: String) {
         val client = OkHttpClient()
         val urlBuidler = HttpUrl.parse(Constant.BASE_URL+"tts")?.newBuilder()
         urlBuidler?.addQueryParameter("app_id", Constant.APP_ID)
@@ -106,7 +112,7 @@ class ScanImagePresenterImp(private val mView: ScanImageView?) : BasePresenter()
         urlBuidler?.addQueryParameter("time", Constant.TIME)
         urlBuidler?.addQueryParameter("user_id",Constant.USER_ID.toString())
         urlBuidler?.addQueryParameter("service_type",Constant.SERVICE_TYPE.toString())
-        urlBuidler?.addQueryParameter("input_text",url)
+        urlBuidler?.addQueryParameter("input_text",text)
 
         val urlRequest = urlBuidler?.build().toString()
         val request = Request.Builder().url(urlRequest).build()

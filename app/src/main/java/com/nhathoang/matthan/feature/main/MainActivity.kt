@@ -1,88 +1,140 @@
 package com.nhathoang.matthan.feature.main
 
-import android.graphics.SurfaceTexture
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.view.TextureView
 import kotlinx.android.synthetic.main.activity_main.*
-import android.Manifest.permission
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothHeadset
-import android.bluetooth.BluetoothProfile
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.support.v4.app.ActivityCompat
-import android.content.pm.PackageManager
-import android.graphics.ImageFormat
-import android.hardware.camera2.*
+import android.content.IntentFilter
 import android.util.Log
-import android.util.Size
 import android.widget.Toast
-import java.util.Arrays.asList
-import android.view.Surface
-import java.util.*
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraMetadata
-import android.hardware.camera2.CaptureRequest
-import android.media.Image
-import android.media.ImageReader
-import android.os.Environment
-import android.os.Handler
-import android.os.HandlerThread
-import android.util.SparseIntArray
+import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbDeviceConnection
+import android.hardware.usb.UsbManager
+import com.felhr.usbserial.UsbSerialDevice
+import com.felhr.usbserial.UsbSerialInterface
 import com.nhathoang.matthan.R
-import com.nhathoang.matthan.feature.scanImage.ScanImageActivity
+import com.nhathoang.matthan.feature.readNews.ReadNews
+import com.nhathoang.matthan.feature.capture.CaptureActivity
 import java.io.*
-import kotlin.collections.ArrayList
+import java.nio.charset.Charset
 
 
 open class MainActivity : AppCompatActivity() {
-
-    companion object {
-        const val REQUEST_BLUETOOTH = 1
-    }
+    //Serial USB
+    private val ACTION_USB_PERMISSION = "permission"
+    private lateinit var mUsbManager: UsbManager
+    private var mDevice: UsbDevice? = null
+    private var mConnection: UsbDeviceConnection? = null
+    private var mSerial: UsbSerialDevice? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        var bluetoothHeadset: BluetoothHeadset? = null
-        var pairedDevices : Set<BluetoothDevice>? = null
-        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter == null) {
-        } else {
-            if (!bluetoothAdapter.enable()) {
-                val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                startActivityForResult(enableBT, REQUEST_BLUETOOTH)
+        mUsbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+        val filter = IntentFilter()
+        filter.addAction(ACTION_USB_PERMISSION)
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+        registerReceiver(broadcastReceiver, filter)
+        val usbDevices = mUsbManager.deviceList
+        if (usbDevices.isNotEmpty()) {
+            var keep = true
+            for (entry in usbDevices.entries) {
+                mDevice = entry.value
+                val deviceVID = mDevice!!.vendorId
+                if (deviceVID == 0x9025) { //Arduino Vendor ID
+                    val pi = PendingIntent.getBroadcast(this, 0, Intent(ACTION_USB_PERMISSION), 0)
+                    mUsbManager.requestPermission(mDevice, pi)
+                    keep = false
+                } else {
+                    mConnection = null
+                    mDevice = null
+                }
+
+                if (!keep)
+                    break
             }
         }
-        bluetoothAdapter?.bondedDevices?.let{
-            pairedDevices = it
-        }
+//        btnCaptureFeature.setOnClickListener {
+//            startActivity(Intent(this@MainActivity, CaptureActivity::class.java))
+//        }
+//        btnBaoNoi.setOnClickListener {
+//            startActivity(Intent(this@MainActivity, ReadNews::class.java))
+//        }
     }
-    inner class BroadCastReceviver : BroadcastReceiver(){
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        //Broadcast Receiver to automatically start and stop the Serial connection.
         override fun onReceive(context: Context?, intent: Intent?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            intent?.let {
+                if (it.action == (ACTION_USB_PERMISSION)) {
+                    val granted = it.extras.getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
+                    if (granted) {
+                        mConnection = mUsbManager.openDevice(mDevice)
+                        mSerial = UsbSerialDevice.createUsbSerialDevice(mDevice, mConnection)
+                        if (mSerial != null) {
+                            if (mSerial!!.open()) { //Set Serial Connection Parameters.
+                                mSerial!!.setBaudRate(9600)
+                                mSerial!!.setDataBits(UsbSerialInterface.DATA_BITS_8)
+                                mSerial!!.setStopBits(UsbSerialInterface.STOP_BITS_1)
+                                mSerial!!.setParity(UsbSerialInterface.PARITY_NONE)
+                                mSerial!!.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF)
+                                mSerial!!.read(mCallback) //
+//                                Toast.makeText(this@MainActivity, "Serial Connection Opened!\n", Toast.LENGTH_SHORT).show()
+                                txtView?.append("Serial Connection Opened!\\n")
+                            } else {
+//                                Toast.makeText(this@MainActivity, "PORT NOT OPEN\n", Toast.LENGTH_SHORT)
+                                txtView?.append("PORT NOT OPEN")
+
+
+                                Log.d("SERIAL", "PORT NOT OPEN")
+                            }
+                        } else {
+//                            Toast.makeText(this@MainActivity, "PORT IS NULL\n", Toast.LENGTH_SHORT)
+                            txtView?.append("PORT IS NULL")
+
+                            Log.d("SERIAL", "PORT IS NULL")
+                        }
+                    } else {
+//                        Toast.makeText(this@MainActivity, "PERMISSION NOT GRANTED\n", Toast.LENGTH_SHORT)
+                        txtView?.append("PERMISSION NOT GRANTED")
+                        Log.d("SERIAL", "PERMISSION NOT GRANTED")
+                    }
+                } else if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) {
+//                        onClickStart(startButton)
+                } else if (intent.action == UsbManager.ACTION_USB_DEVICE_DETACHED) {
+//                        onClickStop(stopButton)
+                } else {
+                }
+            }
+
         }
-
     }
-}
+    private var mCallback: UsbSerialInterface.UsbReadCallback = UsbSerialInterface.UsbReadCallback { receive ->
+            //Defining a Callback which triggers whenever data is read.
+            var data: String? = null
+            try {
+                data = String(receive, Charset.forName("UTF-8"))
+                Toast.makeText(this@MainActivity, data, Toast.LENGTH_SHORT)
 
-//val profileListener = object : BluetoothProfile.ServiceListener {
-//    override fun onServiceDisconnected(profile: Int) {
-//        if (profile == BluetoothProfile.HEADSET) {
-//            bluetoothHeadset = null
-//        }
-//    }
+//                when (data) {
+//                    "nut1" -> {
+//                        startActivity(Intent(this@MainActivity, CaptureActivity::class.java))
+//                    }
+//                    "nut2" -> {
 //
-//    override fun onServiceConnected(profile: Int, proxy: BluetoothProfile?) {
-//        if (profile == BluetoothProfile.HEADSET) {
-//            bluetoothHeadset = proxy as BluetoothHeadset
-//        }
-//    }
-//}
-//bluetoothAdapter?.getProfileProxy(this@MainActivity, profileListener, BluetoothProfile.HEADSET)
-//bluetoothAdapter?.closeProfileProxy(BluetoothProfile.HEADSET, bluetoothHeadset)
+//                    }
+//                    "nut3" -> {
+//                        startActivity(Intent(this@MainActivity, ReadNews::class.java))
+//                    }
+//                }
+
+            } catch (e: UnsupportedEncodingException) {
+                e.printStackTrace()
+            }
+        }
+}
 

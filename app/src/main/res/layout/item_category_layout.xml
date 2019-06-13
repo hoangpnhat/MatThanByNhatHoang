@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/ctrItemCategory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+        <TextView
+                android:padding="30dp"
+                android:id="@+id/txtCategoryName"
+                tools:text="Văn hoá thể thao xã hội"
+                android:textSize="24sp"
+                android:textColor="@drawable/text_color_item"
+                android:background="@drawable/bg_item_selector"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+</android.support.constraint.ConstraintLayout>

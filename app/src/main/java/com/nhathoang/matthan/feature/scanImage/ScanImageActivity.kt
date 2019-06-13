@@ -1,5 +1,6 @@
 package com.nhathoang.matthan.feature.scanImage
 
+import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
@@ -10,6 +11,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.Rotate
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.signature.ObjectKey
+import com.nhathoang.matthan.R
 import com.nhathoang.matthan.feature.Constant
 import com.yasgard.bartr.base.BaseActivity
 import kotlinx.android.synthetic.main.activity_scan_image.*
@@ -50,9 +52,10 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(com.nhathoang.matthan.R.layout.activity_scan_image)
+        setContentView(R.layout.activity_scan_image)
         pathImage = intent.getStringExtra(IMAGE_PATH)
         Log.i("DATA RECEIVE", pathImage)
+        // Sau khi lay dc Path se hien thi bang Glide
         Glide.with(imgScan)
             .load(File(Uri.parse(pathImage).path)) // Uri of the picture
             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
@@ -60,9 +63,13 @@ class ScanImageActivity : BaseActivity<ScanImagePresenterImp>(), ScanImageView {
             .into(imgScan)
 //        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
 //        mPresenter?.getSpeech("Tôi tên là Phạm Khánh Huy")
+        // Chuan bi media
         mediaPlayer = MediaPlayer()
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
+
+        // Gui anh len GOOGLE ML VISION URL
+//        mPresenter?.postImageToOCRService(Uri.parse(pathImage))
+        mPresenter?.getSpeechOK("pham khanh huy")
 
 
     }

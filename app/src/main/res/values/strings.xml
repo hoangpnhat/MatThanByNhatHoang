@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MatThan</string>
+    <string name="text_btn_capture">1. Đọc văn bản</string>
+    <string name="text_btn_baonoi">2. Báo nói</string>
 </resources>
